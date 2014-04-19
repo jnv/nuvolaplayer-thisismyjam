@@ -36,7 +36,8 @@
 		next: 'forwards',
 		song: 'track-title',
 		artist: 'artist-name',
-		play: 'playPause'
+		play: 'playPause',
+		thumbsUp: 'controlLike'
 	};
 
 	var getElement = function(type) {
@@ -105,12 +106,12 @@
 		{
 			return Nuvola.STATE_PLAYING;
 		}
-		else
+		else if(el.className.match(/paused$/))
 		{
 			return Nuvola.STATE_PAUSED;
 		}
 
-
+		return Nuvola.STATE_NONE;
 	};
 
 	/**
@@ -128,13 +129,13 @@
 		var song = null;
 		var artist = null;
 
-		state = getState();
 		try {
+			state = getState();
 			song = getElement('song').textContent;
 			artist = getElement('artist').textContent;
 			album_art = getArtLocation();
-			can_thumbs_up = true;
-			can_thumbs_down = false;
+			can_thumbs_up = (state !== Nuvola.STATE_NONE);
+			// can_thumbs_down = false;
 		} catch (x) {
 			song  = artist = null;
 		}
@@ -184,26 +185,25 @@
 			{
 			case Nuvola.ACTION_PLAY:
 				if (this.state != Nuvola.STATE_PLAYING)
-					alert("Play!");
+					Nuvola.clickOnElement(getElement('play'));
 				break;
 			case Nuvola.ACTION_PAUSE:
-				alert("Play!");
+				Nuvola.clickOnElement(getElement('play'));
 				break;
 			case Nuvola.ACTION_TOGGLE_PLAY:
-				alert("Toggle!");
+				Nuvola.clickOnElement(getElement('play'));
 				break;
 			case Nuvola.ACTION_PREV_SONG:
-				alert("Previous song!");
+				Nuvola.clickOnElement(getElement('prev'));
 				break;
 			case Nuvola.ACTION_NEXT_SONG:
-				alert("Next song!");
+				Nuvola.clickOnElement(getElement('next'));
 				break;
 			case Nuvola.ACTION_THUMBS_UP:
-				alert("Thumbs up!");
+				Nuvola.clickOnElement(getElement('thumbsUp'));
 				break;
-			case Nuvola.ACTION_THUMBS_DOWN:
-				alert("Thumbs down!");
-				break;
+			/*case Nuvola.ACTION_THUMBS_DOWN:
+				break;*/
 			default:
 				// Other commands are not supported
 				throw {"message": "Not supported."};
