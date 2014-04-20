@@ -31,48 +31,48 @@
 	if (Nuvola.checkFlash)
 		Nuvola.checkFlash();
 
-	var ELEM_IDS = {
-		prev: 'backwards',
-		next: 'forwards',
-		song: 'track-title',
-		artist: 'artist-name',
-		play: 'playPause',
-		thumbsUp: 'controlLike'
+	/**
+	 * Generate element selection function
+	 */
+	var elementSelector = function()
+	{
+		var ELEM_IDS = {
+			prev: 'backwards',
+			next: 'forwards',
+			song: 'track-title',
+			artist: 'artist-name',
+			play: 'playPause',
+			thumbsUp: 'controlLike',
+			playAll: 'playAllJams'
+		};
+
+		return function(type) {
+			return document.getElementById(ELEM_IDS[type]);
+		};
 	};
 
-	var getElement = function(type) {
-		return document.getElementById(ELEM_IDS[type]);
-	};
+	var getElement = elementSelector();
 
 	/**
-	 * Creates integration binded to Nuvola JS API
-	 */
-	var Integration = function()
-	{
-		/* Overwrite default commnad function */
-		Nuvola.onMessageReceived = Nuvola.bind(this, this.messageHandler);
-
-		/* For debug output */
-		this.name = "thisismyjam";
-
-		/* Let's run */
-		this.state = Nuvola.STATE_NONE;
-		this.can_thumbs_up = null;
-		this.can_thumbs_down = null;
-		this.can_prev = null;
-		this.can_next = null;
-		this.update();
-	};
-
+	 * Returns {prev: bool, next: bool}
+	 **/
 	var getPlaylistState = function()
 	{
 		var ret = {};
 		['prev', 'next'].forEach(function(type){
-			ret[type] = getElement(type).hasAttribute('disabled');
+			ret[type] = !getElement(type).hasAttribute('disabled');
 		});
 		return ret;
 	};
 
+	/**
+	 * Return an URL of the image of (hopefully) currently playing track
+	 * TODO: store the first found album art with the currently playing track,
+	 *       so the visiting the profile page does not replace a correct album art
+	 *       - OTOH, if I am playing a playlist and I am on the profile page, the incorrect
+	 *       art will be loaded and stored
+	 *
+	 **/
 	var getArtLocation = function()
 	{
 		var img = null;
@@ -93,6 +93,9 @@
 		return null;
 	};
 
+	/**
+	 * Return state depending on the play button
+	 */
 	var getState = function()
 	{
 		var el = getElement('play');
@@ -112,6 +115,42 @@
 		}
 
 		return Nuvola.STATE_NONE;
+	};
+
+	var doPlay = function() {
+		var play = getElement('play');
+		if(play && (getState() != Nuvola.STATE_NONE)) {
+			Nuvola.clickOnElement(play);
+			return true;
+		}
+		var playAll = getElement('playAll');
+		if(playAll)
+		{
+			Nuvola.clickOnElement(playAll);
+			return true;
+		}
+		return false;
+	};
+
+
+	/**
+	 * Creates integration bound to Nuvola JS API
+	 */
+	var Integration = function()
+	{
+		/* Overwrite default commnad function */
+		Nuvola.onMessageReceived = Nuvola.bind(this, this.messageHandler);
+
+		/* For debug output */
+		this.name = "thisismyjam";
+
+		/* Let's run */
+		this.state = Nuvola.STATE_NONE;
+		this.can_thumbs_up = null;
+		this.can_thumbs_down = null;
+		this.can_prev = null;
+		this.can_next = null;
+		this.update();
 	};
 
 	/**
@@ -135,6 +174,10 @@
 			artist = getElement('artist').textContent;
 			album_art = getArtLocation();
 			can_thumbs_up = (state !== Nuvola.STATE_NONE);
+
+			var playlist = getPlaylistState();
+			can_prev = playlist.prev;
+			can_next = playlist.next;
 			// can_thumbs_down = false;
 		} catch (x) {
 			song  = artist = null;
@@ -185,13 +228,14 @@
 			{
 			case Nuvola.ACTION_PLAY:
 				if (this.state != Nuvola.STATE_PLAYING)
-					Nuvola.clickOnElement(getElement('play'));
+					doPlay();
 				break;
 			case Nuvola.ACTION_PAUSE:
-				Nuvola.clickOnElement(getElement('play'));
+				if (this.state == Nuvola.STATE_PLAYING)
+					Nuvola.clickOnElement(getElement('play'));
 				break;
 			case Nuvola.ACTION_TOGGLE_PLAY:
-				Nuvola.clickOnElement(getElement('play'));
+				doPlay();
 				break;
 			case Nuvola.ACTION_PREV_SONG:
 				Nuvola.clickOnElement(getElement('prev'));
