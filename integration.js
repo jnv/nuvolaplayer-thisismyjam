@@ -25,8 +25,7 @@
  */
 
 /* Anonymous function is used not to pollute environment */
-(function(Nuvola)
-{
+(function(Nuvola) {
 
 	if (Nuvola.checkFlash)
 		Nuvola.checkFlash();
@@ -34,8 +33,7 @@
 	/**
 	 * Generate element selection function
 	 */
-	var elementSelector = function()
-	{
+	var elementSelector = function() {
 		var ELEM_IDS = {
 			prev: 'backwards',
 			next: 'forwards',
@@ -56,10 +54,9 @@
 	/**
 	 * Returns {prev: bool, next: bool}
 	 **/
-	var getPlaylistState = function()
-	{
+	var getPlaylistState = function() {
 		var ret = {};
-		['prev', 'next'].forEach(function(type){
+		['prev', 'next'].forEach(function(type) {
 			ret[type] = !getElement(type).hasAttribute('disabled');
 		});
 		return ret;
@@ -71,21 +68,17 @@
 	 *       so the visiting the profile page does not replace a correct album art
 	 *       - OTOH, if I am playing a playlist and I am on the profile page, the incorrect
 	 *       art will be loaded and stored
-	 *
 	 **/
-	var getArtLocation = function()
-	{
+	var getArtLocation = function() {
 		var img = null;
 		// On Playlist page, things are easy
 		img = document.querySelector('.blackHole.playing img');
-		if(img)
-		{
+		if (img) {
 			return img.getAttribute('data-thumb');
 		}
 		// Let's try profile page
 		img = document.querySelector('#jamHolder img');
-		if(img)
-		{
+		if (img) {
 			return img.src;
 		}
 
@@ -96,21 +89,17 @@
 	/**
 	 * Return state depending on the play button
 	 */
-	var getState = function()
-	{
+	var getState = function() {
 		var el = getElement('play');
 
-		if(!el)
-		{
+		if (!el) {
 			return Nuvola.STATE_NONE;
 		}
 
-		if(el.className.match(/playing$/))
-		{
+		if (el.className.match(/playing$/)) {
 			return Nuvola.STATE_PLAYING;
 		}
-		else if(el.className.match(/paused$/))
-		{
+		else if (el.className.match(/paused$/)) {
 			return Nuvola.STATE_PAUSED;
 		}
 
@@ -119,13 +108,12 @@
 
 	var doPlay = function() {
 		var play = getElement('play');
-		if(play && (getState() != Nuvola.STATE_NONE)) {
+		if (play && (getState() != Nuvola.STATE_NONE)) {
 			Nuvola.clickOnElement(play);
 			return true;
 		}
 		var playAll = getElement('playAll');
-		if(playAll)
-		{
+		if (playAll) {
 			Nuvola.clickOnElement(playAll);
 			return true;
 		}
@@ -136,8 +124,7 @@
 	/**
 	 * Creates integration bound to Nuvola JS API
 	 */
-	var Integration = function()
-	{
+	var Integration = function() {
 		/* Overwrite default commnad function */
 		Nuvola.onMessageReceived = Nuvola.bind(this, this.messageHandler);
 
@@ -156,8 +143,7 @@
 	/**
 	 * Updates current playback state
 	 */
-	Integration.prototype.update = function()
-	{
+	Integration.prototype.update = function() {
 		// Default values
 		var state = Nuvola.STATE_NONE;
 		var can_prev = false;
@@ -179,8 +165,9 @@
 			can_prev = playlist.prev;
 			can_next = playlist.next;
 			// can_thumbs_down = false;
-		} catch (x) {
-			song  = artist = null;
+		}
+		catch (x) {
+			song = artist = null;
 		}
 
 		// Save state
@@ -190,23 +177,19 @@
 		Nuvola.updateSong(song, artist, null, album_art, state);
 
 		// Update actions
-		if (this.can_prev !== can_prev)
-		{
+		if (this.can_prev !== can_prev) {
 			this.can_prev = can_prev;
 			Nuvola.updateAction(Nuvola.ACTION_PREV_SONG, can_prev);
 		}
-		if (this.can_next !== can_next)
-		{
+		if (this.can_next !== can_next) {
 			this.can_next = can_next;
 			Nuvola.updateAction(Nuvola.ACTION_NEXT_SONG, can_next);
 		}
-		if (this.can_thumbs_up !== can_thumbs_up)
-		{
+		if (this.can_thumbs_up !== can_thumbs_up) {
 			this.can_thumbs_up = can_thumbs_up;
 			Nuvola.updateAction(Nuvola.ACTION_THUMBS_UP, can_thumbs_up);
 		}
-		if (this.can_thumbs_down !== can_thumbs_down)
-		{
+		if (this.can_thumbs_down !== can_thumbs_down) {
 			this.can_thumbs_down = can_thumbs_down;
 			Nuvola.updateAction(Nuvola.ACTION_THUMBS_DOWN, can_thumbs_down);
 		}
@@ -219,43 +202,41 @@
 	 * Message handler
 	 * @param cmd command to execute
 	 */
-	Integration.prototype.messageHandler = function(cmd)
-	{
+	Integration.prototype.messageHandler = function(cmd) {
 		/* Respond to user actions */
-		try
-		{
-			switch (cmd)
-			{
-			case Nuvola.ACTION_PLAY:
-				if (this.state != Nuvola.STATE_PLAYING)
+		try {
+			switch (cmd) {
+				case Nuvola.ACTION_PLAY:
+					if (this.state != Nuvola.STATE_PLAYING)
+						doPlay();
+					break;
+				case Nuvola.ACTION_PAUSE:
+					if (this.state == Nuvola.STATE_PLAYING)
+						Nuvola.clickOnElement(getElement('play'));
+					break;
+				case Nuvola.ACTION_TOGGLE_PLAY:
 					doPlay();
-				break;
-			case Nuvola.ACTION_PAUSE:
-				if (this.state == Nuvola.STATE_PLAYING)
-					Nuvola.clickOnElement(getElement('play'));
-				break;
-			case Nuvola.ACTION_TOGGLE_PLAY:
-				doPlay();
-				break;
-			case Nuvola.ACTION_PREV_SONG:
-				Nuvola.clickOnElement(getElement('prev'));
-				break;
-			case Nuvola.ACTION_NEXT_SONG:
-				Nuvola.clickOnElement(getElement('next'));
-				break;
-			case Nuvola.ACTION_THUMBS_UP:
-				Nuvola.clickOnElement(getElement('thumbsUp'));
-				break;
-			/*case Nuvola.ACTION_THUMBS_DOWN:
+					break;
+				case Nuvola.ACTION_PREV_SONG:
+					Nuvola.clickOnElement(getElement('prev'));
+					break;
+				case Nuvola.ACTION_NEXT_SONG:
+					Nuvola.clickOnElement(getElement('next'));
+					break;
+				case Nuvola.ACTION_THUMBS_UP:
+					Nuvola.clickOnElement(getElement('thumbsUp'));
+					break;
+					/*case Nuvola.ACTION_THUMBS_DOWN:
 				break;*/
-			default:
-				// Other commands are not supported
-				throw {"message": "Not supported."};
+				default:
+					// Other commands are not supported
+					throw {
+						"message": "Not supported."
+					};
 			}
 			console.log(this.name + ": comand '" + cmd + "' executed.");
 		}
-		catch (e)
-		{
+		catch (e) {
 			// Older API expected exception to be a string.
 			throw (this.name + ": " + e.message);
 		}
@@ -264,6 +245,6 @@
 	/* Store reference */
 	Nuvola.integration = new Integration(); // Singleton
 
-// Immediately call the anonymous function with Nuvola JS API main object as an argument.
-// Note that "this" is set to the Nuvola JS API main object.
+	// Immediately call the anonymous function with Nuvola JS API main object as an argument.
+	// Note that "this" is set to the Nuvola JS API main object.
 })(this);
