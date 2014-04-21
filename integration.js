@@ -49,6 +49,33 @@
 		};
 	};
 
+	var artSelector = function() {
+		/* TIMJ native function returns a jQuery element */
+		var currentJamvatar$ = window.playerView.getCurrentJamvatar$;
+
+		var extractJamvatar = function(root) {
+			root.querySelector('img');
+
+		};
+
+		var fallbackSelector = function() {
+			img = document.querySelector('.blackHole.playing img');
+			if (img) {
+				return img.getAttribute('data-thumb');
+			}
+			// Let's try profile page
+			img = document.querySelector('#jamHolder img');
+			if (img) {
+				return img.src;
+			}
+		};
+
+		return function() {
+
+		};
+
+	};
+
 	var getElement = elementSelector();
 
 	/**
@@ -119,7 +146,6 @@
 		}
 		return false;
 	};
-
 
 	/**
 	 * Creates integration bound to Nuvola JS API
